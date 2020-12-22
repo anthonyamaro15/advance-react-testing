@@ -1,42 +1,28 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { render, cleanup } from '@testing-library/react';
 import App from './App';
 
-// test('renders learn react link', () => {
-//   render(<App />);
-//   const linkElement = screen.getByText(/learn react/i);
-//   expect(linkElement).toBeInTheDocument();
-// });
+import { getData } from './utils/getData';
+import { server, rest } from './testServer';
 
-// describe("MissionForm test", () => {
-//    test("render without error", () => {
-//       render(<App />);
-//    });
+describe("renders App", () => {
+   test('renders App without crashing', () => {
+      render(<App />);
+   });
+})
 
-//    test("renders message when isFetchingData is true", () => {
-//       render(<App isFetchingData={true} />);
-//       expect(screen.getByText(/we are fetching data/i)).not.toBeNull();
-//       expect(screen.queryByText(/get data/i)).toBeNull();
-//    });
+describe("returns correct data from API", () => {
+   test('receives data', async () => {
+      const data = await getData();
+      expect(data._embedded.episodes).toHaveLength(1);
+      cleanup();
+   })
 
-//    test("renders button when isFetchingData is false", () => {
-//       render(<App isFetchingData={false} />);
-//       expect(screen.getByText(/get data/i)).not.toBeNull();
-//       // queryBy will return null instead of throwing an error
-//       expect(screen.queryByText(/we are fetching data/i)).toBeNull();
-//    });
-
-//    test("calls getData when button is clicked", () => {
-//       // jest.fun() creates fake functions
-//       const mockGetData = jest.fn();
-
-//       render(<App getData={mockGetData} />);
-
-//       const button =  screen.getByRole('button');
-//       fireEvent.click(button);
-
-//       expect(mockGetData.mock.calls).toHaveLength(1);
-//       // expect(mockGetData.mock.calls).toBe(1);
-//       // expect(mockGetData.mock.calls.length === 1);
-
-//    })
-// })
+   test('Displays status code when there is an error', async () => {
+      server.use(
+         rest.get('https://api.tvmaze.com/singlesearch/shows?q=stranger-things&embed=episodes', (_req, res, ctx) => {
+            return res(ctx.status(500));
+         })
+      )
+   await expect(getData()).rejects.toThrow("500");
+})
+});

@@ -2,10 +2,8 @@
 import React, { useState, useEffect } from "react";
 import Dropdown from "react-dropdown";
 import parse from "html-react-parser";
-
 import { formatSeasons } from "./utils/formatSeason";
 import { getData } from './utils/getData';
-
 import Episodes from "./components/Episodes";
 
 export default function App() {
@@ -14,14 +12,18 @@ export default function App() {
   const [selectedSeason, setSelectedSeason] = useState("");
   const episodes = seasons[selectedSeason] || [];
 
+
   useEffect(() => {
+    let mounted = true;
     const fetchShow = async () => {
       const data = await getData();
-  
-      setShow(data);
-      setSeasons(formatSeasons(data._embedded.episodes));
+      if(mounted) {
+         setShow(data);
+         setSeasons(formatSeasons(data._embedded.episodes));
+      }
     };
     fetchShow();
+    return () => { mounted = false; }
   }, []);
 
   const handleSelect = e => {
@@ -43,7 +45,7 @@ export default function App() {
         value={selectedSeason || "Select a season"}
         placeholder="Select an option"
       />
-      <Episodes episodes={episodes} />
+      <Episodes data-testid="episodes" episodes={episodes} />
     </div>
   );
 }
